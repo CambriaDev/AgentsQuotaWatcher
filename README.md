@@ -21,6 +21,14 @@ go run ./cmd/server
 
 打开 <http://127.0.0.1:8080>，分别为 Claude 和 Copilot 输入可访问对应额度 API 的访问令牌。Claude 的 OAuth 访问令牌可同时保存刷新令牌和到期时间；配置 Copilot 时还必须填写 GitHub 用户名和每月 credits 上限。上限默认 1500，可按计划修改；仪表盘会显示各模型的 `grossQuantity` 已消耗 AI credits 以及总和，并保留两位小数。程序直接调用 `GET /users/{username}/settings/billing/ai_credit/usage`（API 版本 `2026-03-10`），不再通过 `/user` 自动查询用户名。
 
+### Docker Compose
+
+```bash
+docker compose up -d --build
+```
+
+打开 <http://127.0.0.1:48080>。认证信息会持久化到项目根目录的 `./cert/credentials.json`；`cert` 目录应妥善保管，避免提交到版本控制。
+
 可用环境变量：
 
 | 变量 | 默认值 | 用途 |
