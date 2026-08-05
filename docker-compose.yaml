@@ -7,6 +7,8 @@ services:
     environment:
       QUOTA_LISTEN_ADDR: 0.0.0.0:48080
       QUOTA_CREDENTIAL_FILE: /cert/credentials.json
+      QUOTA_AUTH_USERNAME: ${QUOTA_AUTH_USERNAME:?set QUOTA_AUTH_USERNAME in your environment}
+      QUOTA_AUTH_PASSWORD: ${QUOTA_AUTH_PASSWORD:?set QUOTA_AUTH_PASSWORD in your environment}
     volumes:
       - ./cert:/cert
     restart: unless-stopped

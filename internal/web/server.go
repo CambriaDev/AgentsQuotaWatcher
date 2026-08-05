@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -14,13 +15,23 @@ import (
 type Server struct {
 	service   *app.QuotaService
 	dashboard *template.Template
+	auth      basicAuth
 }
 
-func NewServer(service *app.QuotaService) *Server {
+type basicAuth struct {
+	username string
+	password string
+}
+
+func NewServer(service *app.QuotaService, username, password string) (*Server, error) {
+	if username == "" || password == "" {
+		return nil, fmt.Errorf("authentication username and password are required")
+	}
 	return &Server{
 		service:   service,
 		dashboard: template.Must(template.New("dashboard").Parse(dashboardHTML)),
-	}
+		auth:      basicAuth{username: username, password: password},
+	}, nil
 }
 
 func (s *Server) Routes() http.Handler {
@@ -30,7 +41,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("POST /api/refresh", s.handleRefresh)
 	mux.HandleFunc("POST /api/accounts", s.createAccount)
 	mux.HandleFunc("/api/accounts/", s.handleAccount)
-	return securityHeaders(mux)
+	return securityHeaders(s.auth.middleware(mux))
 }
 
 func (s *Server) handleDashboard(writer http.ResponseWriter, request *http.Request) {
@@ -129,6 +140,20 @@ func securityHeaders(next http.Handler) http.Handler {
 		writer.Header().Set("X-Frame-Options", "DENY")
 		writer.Header().Set("Referrer-Policy", "no-referrer")
 		writer.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'")
+		next.ServeHTTP(writer, request)
+	})
+}
+
+func (auth basicAuth) middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		username, password, ok := request.BasicAuth()
+		if !ok ||
+			subtle.ConstantTimeCompare([]byte(username), []byte(auth.username)) != 1 ||
+			subtle.ConstantTimeCompare([]byte(password), []byte(auth.password)) != 1 {
+			writer.Header().Set("WWW-Authenticate", `Basic realm="Agents Quota Watcher", charset="UTF-8"`)
+			http.Error(writer, "authentication required", http.StatusUnauthorized)
+			return
+		}
 		next.ServeHTTP(writer, request)
 	})
 }

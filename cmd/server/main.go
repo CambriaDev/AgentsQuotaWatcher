@@ -22,6 +22,8 @@ import (
 func main() {
 	address := envOrDefault("QUOTA_LISTEN_ADDR", "0.0.0.0:48080")
 	credentialPath := envOrDefault("QUOTA_CREDENTIAL_FILE", defaultCredentialPath())
+	authUsername := requiredEnv("QUOTA_AUTH_USERNAME")
+	authPassword := requiredEnv("QUOTA_AUTH_PASSWORD")
 
 	credentials, err := store.NewFileCredentialStore(credentialPath)
 	if err != nil {
@@ -37,7 +39,10 @@ func main() {
 		}),
 	)
 	service := app.NewQuotaService(registry, credentials)
-	server := web.NewServer(service)
+	server, err := web.NewServer(service, authUsername, authPassword)
+	if err != nil {
+		log.Fatalf("initialize web server: %v", err)
+	}
 
 	httpServer := &http.Server{
 		Addr:              address,
@@ -77,6 +82,14 @@ func envOrDefault(name, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func requiredEnv(name string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		log.Fatalf("%s must be set", name)
+	}
+	return value
 }
 
 func defaultCredentialPath() string {
