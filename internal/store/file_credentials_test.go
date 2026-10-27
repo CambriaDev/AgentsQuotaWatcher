@@ -50,7 +50,7 @@ func TestFileCredentialStoreSupportsMultipleAccounts(t *testing.T) {
 
 func TestFileCredentialStoreMigratesLegacyCredentials(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "credentials.json")
-	legacy := `{"copilot":{"access_token":"secret","username":"octocat","credit_limit":1500}}`
+	legacy := `{"copilot":{"access_token":"secret","username":"octocat","credit_limit":1500},"deepseek":{"access_token":"deepseek-key"}}`
 	if err := os.WriteFile(path, []byte(legacy), 0600); err != nil {
 		t.Fatalf("write legacy credentials: %v", err)
 	}
@@ -62,7 +62,8 @@ func TestFileCredentialStoreMigratesLegacyCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
-	if len(accounts) != 1 || accounts[0].ID != "legacy-copilot" || accounts[0].Alias != "GitHub Copilot" {
+	if len(accounts) != 2 || accounts[0].ID != "legacy-copilot" || accounts[0].Alias != "GitHub Copilot" ||
+		accounts[1].ID != "legacy-deepseek" || accounts[1].Alias != "DeepSeek" {
 		t.Fatalf("migrated accounts = %#v", accounts)
 	}
 	data, err := os.ReadFile(path)

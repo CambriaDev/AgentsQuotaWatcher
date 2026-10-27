@@ -159,5 +159,8 @@ func defaultAlias(provider domain.ProviderID) string {
 	if provider == domain.ProviderClaude {
 		return "Claude"
 	}
+	if provider == domain.ProviderDeepSeek {
+		return "DeepSeek"
+	}
 	return string(provider)
 }

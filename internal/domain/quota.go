@@ -9,8 +9,9 @@ import (
 type ProviderID string
 
 const (
-	ProviderClaude  ProviderID = "claude"
-	ProviderCopilot ProviderID = "copilot"
+	ProviderClaude   ProviderID = "claude"
+	ProviderCopilot  ProviderID = "copilot"
+	ProviderDeepSeek ProviderID = "deepseek"
 )
 
 var ErrNotConnected = errors.New("provider is not connected")
@@ -35,8 +36,9 @@ func (c Credentials) Connected() bool {
 }
 
 type Breakdown struct {
-	Name string  `json:"name"`
-	Used float64 `json:"used"`
+	Name   string   `json:"name"`
+	Used   float64  `json:"used"`
+	Amount *float64 `json:"amount,omitempty"`
 }
 
 type Metric struct {
@@ -45,6 +47,9 @@ type Metric struct {
 	Used      float64     `json:"used"`
 	Limit     float64     `json:"limit"`
 	Percent   float64     `json:"percent"`
+	Amount    *float64    `json:"amount,omitempty"`
+	Currency  string      `json:"currency,omitempty"`
+	Available *bool       `json:"available,omitempty"`
 	ResetAt   *time.Time  `json:"reset_at,omitempty"`
 	Breakdown []Breakdown `json:"breakdown,omitempty"`
 }

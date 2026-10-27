@@ -22,7 +22,7 @@ const dashboardHTML = `<!doctype html>
 <body>
   <main>
     <header>
-      <div><h1>Agents Quota Watcher</h1><p>Claude 与 GitHub Copilot 剩余额度概览。</p></div>
+      <div><h1>Agents Quota Watcher</h1><p>Claude、GitHub Copilot 与 DeepSeek API 余额概览。</p></div>
       <div class="actions"><button id="add-account">添加账户</button><button class="secondary" id="refresh">刷新全部</button></div>
     </header>
     <p id="notice" aria-live="polite"></p>
@@ -32,11 +32,11 @@ const dashboardHTML = `<!doctype html>
     <form id="credential-form">
       <h2 id="dialog-title">连接账户</h2>
       <p>令牌仅保存到此机器的本地凭据文件中，文件权限为仅当前用户可读写。</p>
-      <label for="provider">服务</label><select id="provider" name="provider"><option value="copilot">GitHub Copilot</option><option value="claude">Claude</option></select>
+      <label for="provider">服务</label><select id="provider" name="provider"><option value="copilot">GitHub Copilot</option><option value="claude">Claude</option><option value="deepseek">DeepSeek API</option></select>
       <label for="alias">卡片别名</label><input id="alias" name="alias" type="text" maxlength="80" placeholder="例如：工作账号" required>
       <div id="username-field" hidden><label for="username">GitHub 用户名</label><input id="username" name="username" type="text" autocomplete="username"></div>
       <div id="credit-limit-field" hidden><label for="credit_limit">每月 credits 上限</label><input id="credit_limit" name="credit_limit" type="number" min="1" step="1" value="1500"><p>默认 1500，可按你的 Copilot 计划调整。</p></div>
-      <label for="access_token">访问令牌</label><input id="access_token" name="access_token" type="password" autocomplete="off" required>
+      <label for="access_token">访问令牌 / API Key</label><input id="access_token" name="access_token" type="password" autocomplete="off" required>
       <label for="refresh_token">刷新令牌（Claude OAuth 可选）</label><input id="refresh_token" name="refresh_token" type="password" autocomplete="off">
       <label for="expires_at">过期时间（可选，RFC 3339）</label><input id="expires_at" name="expires_at" type="text" placeholder="2026-08-01T00:00:00Z">
       <div class="dialog-actions"><button type="button" class="secondary" id="cancel">取消</button><button type="submit">保存并验证</button></div>
@@ -48,8 +48,20 @@ const dashboardHTML = `<!doctype html>
     const relativeTime = value => { if (!value) return '尚未刷新'; const seconds = Math.max(0, Math.floor((Date.now() - new Date(value)) / 1000)); if (seconds < 10) return '刚刚刷新'; if (seconds < 60) return seconds + ' 秒前刷新'; if (seconds < 3600) return Math.floor(seconds / 60) + ' 分钟前刷新'; return Math.floor(seconds / 3600) + ' 小时前刷新'; };
     const resetTime = value => value ? '重置：' + new Date(value).toLocaleString() : '';
     function metricHTML(metric) {
-      const percent = Math.min(100, Math.max(0, Number(metric.percent || 0))), tone = percent >= 80 ? 'danger' : percent >= 50 ? 'warn' : '';
       const formatCredits = value => Number(value).toLocaleString(undefined, {maximumFractionDigits: 2});
+      if (metric.amount !== null && metric.amount !== undefined) {
+        const currency = metric.currency ? ' ' + escapeHTML(metric.currency) : '';
+        const amount = formatCredits(metric.amount) + currency;
+        const availability = metric.available === true ? 'API 可用' : metric.available === false ? 'API 余额不可用' : '';
+        const breakdown = (metric.breakdown || []).map(item => {
+          const value = item.amount !== null && item.amount !== undefined ? item.amount : item.used;
+          return '<div class="model-row"><span>' + escapeHTML(item.name) + '</span><strong>' + formatCredits(value) + currency + '</strong></div>';
+        }).join('');
+        const breakdownHTML = breakdown ? '<div class="model-list">' + breakdown + '</div>' : '';
+        return '<div class="metric balance"><div class="metric-row"><span>' + escapeHTML(metric.label) + '</span><strong>' + amount + '</strong></div><div class="details">' + availability + '</div>' + breakdownHTML + '</div>';
+      }
+
+      const percent = Math.min(100, Math.max(0, Number(metric.percent || 0))), tone = percent >= 80 ? 'danger' : percent >= 50 ? 'warn' : '';
       const amount = metric.limit ? formatCredits(metric.used) + ' / ' + formatCredits(metric.limit) : percent.toFixed(0) + '%';
       const breakdown = (metric.breakdown || []).map(item => '<div class="model-row"><span>' + escapeHTML(item.name) + '</span><strong>' + formatCredits(item.used) + ' credits</strong></div>').join('');
       const modelList = breakdown ? '<div class="model-list">' + breakdown + '</div>' : '';

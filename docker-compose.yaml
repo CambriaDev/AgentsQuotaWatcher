@@ -3,7 +3,7 @@ services:
     build:
       context: .
     ports:
-      - "127.0.0.1:48080:48080"
+      - "${QUOTA_BIND_ADDRESS:-127.0.0.1}:48080:48080"
     environment:
       QUOTA_LISTEN_ADDR: 0.0.0.0:48080
       QUOTA_CREDENTIAL_FILE: /cert/credentials.json

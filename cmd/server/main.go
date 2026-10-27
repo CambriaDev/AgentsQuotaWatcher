@@ -15,12 +15,13 @@ import (
 	"github.com/cambriadev/agents-quota-watcher/internal/providers"
 	"github.com/cambriadev/agents-quota-watcher/internal/providers/claude"
 	"github.com/cambriadev/agents-quota-watcher/internal/providers/copilot"
+	"github.com/cambriadev/agents-quota-watcher/internal/providers/deepseek"
 	"github.com/cambriadev/agents-quota-watcher/internal/store"
 	"github.com/cambriadev/agents-quota-watcher/internal/web"
 )
 
 func main() {
-	address := envOrDefault("QUOTA_LISTEN_ADDR", "0.0.0.0:48080")
+	address := envOrDefault("QUOTA_LISTEN_ADDR", "127.0.0.1:48080")
 	credentialPath := envOrDefault("QUOTA_CREDENTIAL_FILE", defaultCredentialPath())
 	authUsername := requiredEnv("QUOTA_AUTH_USERNAME")
 	authPassword := requiredEnv("QUOTA_AUTH_PASSWORD")
@@ -36,6 +37,9 @@ func main() {
 		}),
 		copilot.NewProvider(copilot.Config{
 			APIBaseURL: envOrDefault("GITHUB_API_BASE_URL", "https://api.github.com"),
+		}),
+		deepseek.NewProvider(deepseek.Config{
+			APIBaseURL: envOrDefault("DEEPSEEK_API_BASE_URL", deepseek.DefaultAPIBaseURL),
 		}),
 	)
 	service := app.NewQuotaService(registry, credentials)
