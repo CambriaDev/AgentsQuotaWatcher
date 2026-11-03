@@ -1,12 +1,13 @@
 # Agents Quota Watcher
 
-一个运行在本机的 Go Web 应用，用于集中查看 **Claude**、**GitHub Copilot** 的额度使用情况，以及 **DeepSeek API** 账户余额。默认仅监听本机地址，不会上传任何令牌或用量数据。
+一个运行在本机的 Go Web 应用，用于集中查看 **Claude**、**GitHub Copilot** 和 **OpenCode Go** 的额度使用情况，以及 **DeepSeek API** 账户余额。默认仅监听本机地址，不会上传任何令牌或用量数据。
 
 ## 功能
 
 - Claude：5 小时会话、7 天全模型和 7 天 Sonnet 使用率与重置时间。
 - GitHub Copilot：当月 Premium Requests 总量、额度上限和模型明细。
 - DeepSeek API：各币种当前余额、赠余额、充值余额及 API 可用状态。
+- OpenCode Go：滚动 5 小时、每周和每月额度使用率及重置时间。
 - 多账户卡片：同一 Provider 可添加多个账户；为每个账户设置别名（例如“工作 Copilot”“个人 Copilot”）以便区分。未添加账户时不会显示空卡片。
 - 本地凭据管理：访问令牌保存在 `~/.agents-quota-watcher/credentials.json`，目录为 `0700`、文件为 `0600`。
 - 自动刷新：启动时刷新一次，之后每分钟刷新；界面也可手动刷新。
@@ -22,7 +23,7 @@ QUOTA_AUTH_PASSWORD='choose-a-strong-password' \
 go run ./cmd/server
 ```
 
-打开 <http://127.0.0.1:48080>，浏览器会要求输入上述用户名和密码；随后添加对应服务的访问令牌。DeepSeek 使用在 DeepSeek API 平台创建的 API Key，程序通过 `GET https://api.deepseek.com/user/balance` 查询当前余额；余额只表示账户现状，不代表用量历史。Claude 的 OAuth 访问令牌可同时保存刷新令牌和到期时间；配置 Copilot 时还必须填写 GitHub 用户名和每月 credits 上限。上限默认 1500，可按计划修改；仪表盘会显示各模型的 `grossQuantity` 已消耗 AI credits 以及总和，并保留两位小数。程序直接调用 `GET /users/{username}/settings/billing/ai_credit/usage`（API 版本 `2026-03-10`），不再通过 `/user` 自动查询用户名。若要让受信任局域网中的客户端（例如 ESP32-C3）访问本机服务，需显式设置 `QUOTA_LISTEN_ADDR=0.0.0.0:48080`；该服务使用 HTTP，避免在不可信网络上传输 Basic Auth 凭据。
+打开 <http://127.0.0.1:48080>，浏览器会要求输入上述用户名和密码；随后添加对应服务的访问令牌。DeepSeek 使用在 DeepSeek API 平台创建的 API Key，程序通过 `GET https://api.deepseek.com/user/balance` 查询当前余额；余额只表示账户现状，不代表用量历史。OpenCode Go 使用 OpenCode Go API Key，程序通过 `GET https://opencode.ai/zen/go/v1/usage` 查询滚动 5 小时、每周和每月额度使用率及重置时间。Claude 的 OAuth 访问令牌可同时保存刷新令牌和到期时间；配置 Copilot 时还必须填写 GitHub 用户名和每月 credits 上限。上限默认 1500，可按计划修改；仪表盘会显示各模型的 `grossQuantity` 已消耗 AI credits 以及总和，并保留两位小数。程序直接调用 `GET /users/{username}/settings/billing/ai_credit/usage`（API 版本 `2026-03-10`），不再通过 `/user` 自动查询用户名。若要让受信任局域网中的客户端（例如 ESP32-C3）访问本机服务，需显式设置 `QUOTA_LISTEN_ADDR=0.0.0.0:48080`；该服务使用 HTTP，避免在不可信网络上传输 Basic Auth 凭据。
 
 ### Docker Compose
 
@@ -53,6 +54,7 @@ Docker Compose 默认只绑定本机回环地址。若需要让同一受信任�
 | `CLAUDE_API_BASE_URL` | `https://api.anthropic.com` | Claude API 基础地址，便于测试或代理 |
 | `GITHUB_API_BASE_URL` | `https://api.github.com` | GitHub API 基础地址，便于测试或 GitHub Enterprise |
 | `DEEPSEEK_API_BASE_URL` | `https://api.deepseek.com` | DeepSeek API 基础地址，便于测试或代理 |
+| `OPENCODE_GO_API_BASE_URL` | `https://opencode.ai/zen/go/v1` | OpenCode Go API 基础地址，便于测试或代理 |
 
 > 默认监听地址为 `127.0.0.1:48080`，不要将服务暴露到公网；该 Web UI 和 `/api/usage` 使用 HTTP Basic Auth 保护，仍应通过 HTTPS 或受信任的反向代理访问。
 
@@ -67,6 +69,7 @@ internal/app/                刷新编排、快照状态和凭据用例
 internal/providers/claude/   Claude API 适配器
 internal/providers/copilot/ GitHub Copilot API 适配器
 internal/providers/deepseek/ DeepSeek API 余额适配器
+internal/providers/opencode/ OpenCode Go 额度适配器
 internal/providers/          Provider 注册表
 internal/store/              本地凭据持久化
 internal/web/                HTTP API 和仪表盘

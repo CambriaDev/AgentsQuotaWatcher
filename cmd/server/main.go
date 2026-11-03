@@ -16,6 +16,7 @@ import (
 	"github.com/cambriadev/agents-quota-watcher/internal/providers/claude"
 	"github.com/cambriadev/agents-quota-watcher/internal/providers/copilot"
 	"github.com/cambriadev/agents-quota-watcher/internal/providers/deepseek"
+	"github.com/cambriadev/agents-quota-watcher/internal/providers/opencode"
 	"github.com/cambriadev/agents-quota-watcher/internal/store"
 	"github.com/cambriadev/agents-quota-watcher/internal/web"
 )
@@ -40,6 +41,9 @@ func main() {
 		}),
 		deepseek.NewProvider(deepseek.Config{
 			APIBaseURL: envOrDefault("DEEPSEEK_API_BASE_URL", deepseek.DefaultAPIBaseURL),
+		}),
+		opencode.NewProvider(opencode.Config{
+			APIBaseURL: envOrDefault("OPENCODE_GO_API_BASE_URL", opencode.DefaultAPIBaseURL),
 		}),
 	)
 	service := app.NewQuotaService(registry, credentials)

@@ -12,6 +12,7 @@ const (
 	ProviderClaude   ProviderID = "claude"
 	ProviderCopilot  ProviderID = "copilot"
 	ProviderDeepSeek ProviderID = "deepseek"
+	ProviderOpenCode ProviderID = "opencode"
 )
 
 var ErrNotConnected = errors.New("provider is not connected")

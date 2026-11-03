@@ -162,5 +162,8 @@ func defaultAlias(provider domain.ProviderID) string {
 	if provider == domain.ProviderDeepSeek {
 		return "DeepSeek"
 	}
+	if provider == domain.ProviderOpenCode {
+		return "OpenCode Go"
+	}
 	return string(provider)
 }

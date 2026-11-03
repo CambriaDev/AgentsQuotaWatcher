@@ -22,7 +22,7 @@ const dashboardHTML = `<!doctype html>
 <body>
   <main>
     <header>
-      <div><h1>Agents Quota Watcher</h1><p>Claude、GitHub Copilot 与 DeepSeek API 余额概览。</p></div>
+      <div><h1>Agents Quota Watcher</h1><p>Claude、GitHub Copilot、DeepSeek API 与 OpenCode Go 额度概览。</p></div>
       <div class="actions"><button id="add-account">添加账户</button><button class="secondary" id="refresh">刷新全部</button></div>
     </header>
     <p id="notice" aria-live="polite"></p>
@@ -32,7 +32,7 @@ const dashboardHTML = `<!doctype html>
     <form id="credential-form">
       <h2 id="dialog-title">连接账户</h2>
       <p>令牌仅保存到此机器的本地凭据文件中，文件权限为仅当前用户可读写。</p>
-      <label for="provider">服务</label><select id="provider" name="provider"><option value="copilot">GitHub Copilot</option><option value="claude">Claude</option><option value="deepseek">DeepSeek API</option></select>
+      <label for="provider">服务</label><select id="provider" name="provider"><option value="copilot">GitHub Copilot</option><option value="claude">Claude</option><option value="deepseek">DeepSeek API</option><option value="opencode">OpenCode Go</option></select>
       <label for="alias">卡片别名</label><input id="alias" name="alias" type="text" maxlength="80" placeholder="例如：工作账号" required>
       <div id="username-field" hidden><label for="username">GitHub 用户名</label><input id="username" name="username" type="text" autocomplete="username"></div>
       <div id="credit-limit-field" hidden><label for="credit_limit">每月 credits 上限</label><input id="credit_limit" name="credit_limit" type="number" min="1" step="1" value="1500"><p>默认 1500，可按你的 Copilot 计划调整。</p></div>
